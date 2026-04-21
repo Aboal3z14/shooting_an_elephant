@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shooting an Elephant — Literary Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #0a0806;
+    --parchment: #f5ede0;
+    --rust: #9b3a1a;
+    --gold: #c9913a;
+    --sage: #4a5c44;
+    --smoke: #8c7b6e;
+    --cream: #fdf6ec;
+    --blood: #6b1a1a;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'Cormorant Garamond', serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.3s, height 0.3s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 40px; height: 40px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease-out, width 0.3s, height 0.3s;
+    opacity: 0.6;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.5;
+  }
+
+  /* ───────────── HERO ───────────── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 4rem 2rem;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(155,58,26,0.25) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(74,92,68,0.2) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 10% 60%, rgba(201,145,58,0.1) 0%, transparent 60%),
+      #0a0806;
+    animation: bgShift 12s ease-in-out infinite alternate;
+  }
+  @keyframes bgShift {
+    0%  { filter: hue-rotate(0deg) brightness(1); }
+    100%{ filter: hue-rotate(8deg) brightness(1.05); }
+  }
+
+  /* Floating particles */
+  .particles { position: absolute; inset: 0; overflow: hidden; }
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: float linear infinite;
+    opacity: 0;
+  }
+  @keyframes float {
+    0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.3; }
+    100% { transform: translateY(-10vh) translateX(var(--drift)); opacity: 0; }
+  }
+
+  .hero-eyebrow {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.4em;
+    font-size: clamp(0.95rem, 1.6vw, 1.2rem);
+    color: var(--gold);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.3s forwards;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3.5rem, 10vw, 9rem);
+    font-weight: 900;
+    line-height: 0.9;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    animation: fadeUp 1s 0.5s forwards;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--rust);
+    display: block;
+    -webkit-text-stroke: 1px var(--rust);
+  }
+  .hero-title .outline {
+    -webkit-text-stroke: 1.5px var(--parchment);
+    color: transparent;
+    display: block;
+  }
+
+  .hero-divider {
+    width: 120px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 2.5rem auto;
+    opacity: 0;
+    animation: fadeIn 1s 1s forwards;
+  }
+
+  .hero-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.25rem, 2.5vw, 1.7rem);
+    color: var(--smoke);
+    text-align: center;
+    max-width: 600px;
+    line-height: 1.8;
+    opacity: 0;
+    animation: fadeUp 1s 1.1s forwards;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    animation: fadeIn 1s 2s forwards;
+  }
+  .scroll-hint span {
+    font-family: 'Bebas Neue';
+    letter-spacing: 0.3em;
+    font-size: 0.85rem;
+    width: 1px; height: 50px;
+    background: linear-gradient(180deg, var(--gold), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { transform: scaleY(1); opacity: 1; }
+    50% { transform: scaleY(0.6); opacity: 0.4; }
+  }
+
+  /* ───────────── SUMMARY BANNER ───────────── */
+  .summary-banner {
+    background: var(--rust);
+    padding: 5rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .summary-banner::before {
+    content: 'POV';
+    position: absolute;
+    font-family: 'Bebas Neue';
+    font-size: 20rem;
+    color: rgba(255,255,255,0.04);
+    top: 50%;
+    left: -2%;
+    transform: translateY(-50%);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .summary-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 3rem;
+    position: relative;
+    z-index: 2;
+  }
+  .summary-item {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+  .summary-item.visible { opacity: 1; transform: translateY(0); }
+  .summary-label {
+    font-family: 'Bebas Neue';
+    letter-spacing: 0.3em;
+    font-size: 0.95rem;
+  }
+  .summary-value {
+    font-family: 'Playfair Display';
+    font-size: 1.8rem;
+    line-height: 1.3;
+  }
+
+  /* ───────────── PARAGRAPH SECTIONS ───────────── */
+  .section {
+    padding: 8rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .section:nth-child(even) { background: #0d0b08; }
+  .section:nth-child(odd)  { background: #0a0806; }
+
+  .section-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 6rem;
+    align-items: start;
+  }
+  .section-inner.reverse { direction: rtl; }
+  .section-inner.reverse > * { direction: ltr; }
+
+  /* big number */
+  .para-number {
+    font-family: 'Bebas Neue';
+    font-size: clamp(8rem, 18vw, 14rem);
+    line-height: 1;
+    -webkit-text-stroke: 1px rgba(201,145,58,0.3);
+    color: transparent;
+    position: sticky;
+    top: 20vh;
+    transition: -webkit-text-stroke-color 0.6s;
+  }
+  .para-number.active { -webkit-text-stroke-color: var(--gold); }
+
+  .para-content { display: flex; flex-direction: column; gap: 3rem; }
+
+  .para-heading {
+    font-family: 'Playfair Display';
+    font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.2;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+  .para-heading.visible { opacity: 1; transform: translateX(0); }
+
+  /* CARD */
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201,145,58,0.15);
+    border-radius: 2px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(25px);
+    transition: opacity 0.7s, transform 0.7s, border-color 0.4s, background 0.4s;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--gold), var(--rust));
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.5s 0.2s;
+  }
+  .card.visible { opacity: 1; transform: translateY(0); }
+  .card.visible::before { transform: scaleY(1); }
+  .card:hover {
+    border-color: rgba(201,145,58,0.4);
+    background: rgba(255,255,255,0.06);
+  }
+
+  .card-title {
+    font-family: 'Bebas Neue';
+    letter-spacing: 0.25em;
+    font-size: 1rem;
+  }
+  .card-body {
+    font-size: 1.2rem;
+    color: rgba(245,237,224,0.85);
+  }
+  .card-body strong { color: var(--parchment); font-weight: 600; }
+
+  /* THEME PILLS */
+  .theme-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .pill {
+    padding: 0.35rem 1rem;
+    border: 1px solid rgba(201,145,58,0.4);
+    border-radius: 99px;
+    font-size: 1.05rem;
+    font-style: italic;
+    transition: background 0.3s, color 0.3s;
+    cursor: default;
+  }
+  .pill:hover { background: var(--gold); color: var(--ink); }
+
+  /* FIGURES LIST */
+  .figure-item {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .figure-type {
+    font-family: 'Bebas Neue';
+    font-size: 0.85rem;
+    min-width: 90px;
+  }
+  .figure-text {
+    font-style: italic;
+    color: rgba(245,237,224,0.75);
+    font-size: 1.1rem;
+  }
+
+  /* ───────────── PROGRESSION SECTION ───────────── */
+  .progression {
+    padding: 8rem 2rem;
+    background: var(--sage);
+    position: relative;
+    overflow: hidden;
+  }
+  .progression::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,0.5) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .progression-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+  .prog-title {
+    font-family: 'Playfair Display';
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 900;
+    margin-bottom: 4rem;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s, transform 0.7s;
+  }
+  .prog-title.visible { opacity: 1; transform: translateY(0); }
+
+  .prog-track {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .prog-track::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 40px;
+    bottom: 40px;
+    width: 1px;
+    background: linear-gradient(180deg, var(--gold), rgba(201,145,58,0.2));
+  }
+
+  .prog-step {
+    display: flex;
+    gap: 2.5rem;
+    align-items: flex-start;
+    padding: 2.5rem 0;
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+  .prog-step.visible { opacity: 1; transform: translateX(0); }
+
+  .prog-dot {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue';
+    font-size: 1.3rem;
+    color: var(--gold);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    transition: background 0.4s, color 0.4s;
+  }
+  .prog-step:hover .prog-dot { background: var(--gold); color: var(--ink); }
+
+  .prog-text h3 {
+    font-family: 'Playfair Display';
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .prog-text p {
+    font-size: 1.15rem;
+  }
+
+  /* ───────────── CLOSING QUOTE ───────────── */
+  .closing {
+    padding: 10rem 2rem;
+    background: var(--ink);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .closing::before {
+    content: '"';
+    position: absolute;
+    font-family: 'Playfair Display';
+    font-size: 30rem;
+    color: rgba(155,58,26,0.06);
+    top: -5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .quote-text {
+    font-family: 'Playfair Display';
+    font-style: italic;
+    font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    line-height: 1.5;
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 1s;
+  }
+  .quote-text.visible { opacity: 1; }
+  .quote-attr {
+    font-family: 'Bebas Neue';
+    letter-spacing: 0.4em;
+    font-size: 1rem;
+    transition: opacity 1s 0.4s;
+  }
+  .quote-attr.visible { opacity: 1; }
+
+  /* ───────────── KEYFRAMES ───────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ───────────── DELAY HELPERS ───────────── */
+  .delay-1 { transition-delay: 0.1s !important; }
+  .delay-2 { transition-delay: 0.2s !important; }
+  .delay-3 { transition-delay: 0.3s !important; }
+  .delay-4 { transition-delay: 0.4s !important; }
+
+  @media (max-width: 768px) {
+    .section-inner { grid-template-columns: 1fr; gap: 2rem; }
+    .section-inner.reverse { direction: ltr; }
+    .para-number { position: static; font-size: 6rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ══════════ HERO ══════════ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="particles" id="particles"></div>
+
+  <p class="hero-eyebrow">George Orwell · Essay Analysis · 1936</p>
+
+  <h1 class="hero-title">
+    <span class="outline">Shooting</span>
+    <em>an Elephant</em>
+  </h1>
+
+  <div class="hero-divider"></div>
+
+  <p class="hero-sub">
+    A deep literary exploration of imperialism, moral conflict,<br>and the crushing weight of power.
+  </p>
+
+  <div class="scroll-hint">
+    <span>Explore</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ══════════ SUMMARY BANNER ══════════ -->
+<div class="summary-banner">
+  <div class="summary-inner">
+    <div class="summary-item">
+      <div class="summary-label">Point of View</div>
+      <div class="summary-value">First-Person Narrative</div>
+    </div>
+    <div class="summary-item delay-1">
+      <div class="summary-label">Primary Theme</div>
+      <div class="summary-value">Imperialism & Its Costs</div>
+    </div>
+    <div class="summary-item delay-2">
+      <div class="summary-label">Tone Arc</div>
+      <div class="summary-value">Bitter → Conflicted → Tense</div>
+    </div>
+    <div class="summary-item delay-3">
+      <div class="summary-label">Paragraphs Analysed</div>
+      <div class="summary-value">Three</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PARAGRAPH 1 ══════════ -->
+<section class="section" id="p1">
+  <div class="section-inner">
+    <div class="para-number" data-target="p1">01</div>
+    <div class="para-content">
+      <h2 class="para-heading">External Hostility &amp; Colonial Resentment</h2>
+
+      <div class="card">
+        <div class="card-title">Explanation</div>
+        <div class="card-body">
+          Orwell describes how the Burmese people strongly dislike Europeans,
+          especially him as a police officer. He is insulted, mocked, and humiliated—
+          laying bare the raw tension between colonizers and the colonised.
+        </div>
+      </div>
+
+      <div class="card delay-1">
+        <div class="card-title">Themes</div>
+        <div class="theme-pills">
+          <span class="pill">Hatred caused by imperialism</span>
+          <span class="pill">Conflict between rulers and the ruled</span>
+        </div>
+      </div>
+
+      <div class="card delay-2">
+        <div class="card-title">Figures of Speech &amp; Devices</div>
+        <div>
+          <div class="figure-item">
+            <span class="figure-type">Imagery</span>
+            <span class="figure-text">"sneering yellow faces"</span>
+          </div>
+          <div class="figure-item">
+            <span class="figure-type">Hyperbole</span>
+            <span class="figure-text">"large numbers of people"</span>
+          </div>
+          <div class="figure-item">
+            <span class="figure-type">Tone</span>
+            <span class="figure-text">Bitter and frustrated</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PARAGRAPH 2 ══════════ -->
+<section class="section" id="p2">
+  <div class="section-inner reverse">
+    <div class="para-number" data-target="p2">02</div>
+    <div class="para-content">
+      <h2 class="para-heading">Inner Conflict &amp; Moral Confusion</h2>
+
+      <div class="card">
+        <div class="card-title">Explanation</div>
+        <div class="card-body">
+          Orwell reveals his inner turmoil — he despises the machinery of empire,
+          yet simultaneously nurses anger toward the Burmese. He is trapped between
+          two irreconcilable positions, belonging fully to neither.
+        </div>
+      </div>
+
+      <div class="card delay-1">
+        <div class="card-title">Themes</div>
+        <div class="theme-pills">
+          <span class="pill">Inner conflict</span>
+          <span class="pill">Moral confusion under imperialism</span>
+        </div>
+      </div>
+
+      <div class="card delay-2">
+        <div class="card-title">Figures of Speech &amp; Devices</div>
+        <div>
+          <div class="figure-item">
+            <span class="figure-type">Contrast</span>
+            <span class="figure-text">Hatred of empire vs. anger at the Burmese</span>
+          </div>
+          <div class="figure-item">
+            <span class="figure-type">Metaphor</span>
+            <span class="figure-text">"dirty work of Empire"</span>
+          </div>
+          <div class="figure-item">
+            <span class="figure-type">Strong Diction</span>
+            <span class="figure-text">"evil," "oppressors," "guilt"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PARAGRAPH 3 ══════════ -->
+<section class="section" id="p3">
+  <div class="section-inner">
+    <div class="para-number" data-target="p3">03</div>
+    <div class="para-content">
+      <h2 class="para-heading">Catalytic Action &amp; Symbolic Power</h2>
+
+      <div class="card">
+        <div class="card-title">Explanation</div>
+        <div class="card-body">
+          Orwell introduces the rampaging elephant — the inciting event that sets
+          the essay's moral machinery in motion. The destruction it causes forces
+          Orwell into a public test of authority and conscience.
+        </div>
+      </div>
+
+      <div class="card delay-1">
+        <div class="card-title">Themes</div>
+        <div class="theme-pills">
+          <span class="pill">Power and responsibility</span>
+          <span class="pill">Moral testing</span>
+        </div>
+      </div>
+
+      <div class="card delay-2">
+        <div class="card-title">Figures of Speech &amp; Devices</div>
+        <div>
+          <div class="figure-item">
+            <span class="figure-type">Foreshadowing</span>
+            <span class="figure-text">"enlightening"</span>
+          </div>
+          <div class="figure-item">
+            <span class="figure-type">Imagery</span>
+            <span class="figure-text">Vivid destruction caused by elephant</span>
+          </div>
+          <div class="figure-item">
+            <span class="figure-type">Symbolism</span>
+            <span class="figure-text">Elephant as a vessel of imperial power</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ NARRATIVE PROGRESSION ══════════ -->
+<section class="progression">
+  <div class="progression-inner">
+    <h2 class="prog-title">Narrative Progression</h2>
+    <div class="prog-track">
+      <div class="prog-step">
+        <div class="prog-dot">P1</div>
+        <div class="prog-text">
+          <h3>External Conflict</h3>
+          <p>The world pushes back against Orwell. Hostility, mockery, and the visible hatred of the colonised make the weight of empire impossible to ignore.</p>
+        </div>
+      </div>
+      <div class="prog-step delay-2">
+        <div class="prog-dot">P2</div>
+        <div class="prog-text">
+          <h3>Internal Conflict</h3>
+          <p>The battle moves inward. Orwell wrestles with his own complicity — hating imperialism while fearing and resenting those he oppresses.</p>
+        </div>
+      </div>
+      <div class="prog-step delay-4">
+        <div class="prog-dot">P3</div>
+        <div class="prog-text">
+          <h3>Catalyst &amp; Action</h3>
+          <p>The elephant shatters the stasis. External event meets internal paralysis, forcing a moral reckoning that will define the entire essay.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ CLOSING QUOTE ══════════ -->
+<section class="closing">
+  <p class="quote-text">
+    "When the white man turns tyrant it is his own freedom that he destroys."
+  </p>
+  <p class="quote-attr">George Orwell — Shooting an Elephant</p>
+</section>
+
+<script>
+  /* ── Custom Cursor ── */
+  const cursor = document.getElementById('cursor');
+  const ring   = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  (function animCursor(){
+    cursor.style.left = mx + 'px';
+    cursor.style.top  = my + 'px';
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    requestAnimationFrame(animCursor);
+  })();
+
+  /* ── Particles ── */
+  const pCont = document.getElementById('particles');
+  for(let i = 0; i < 40; i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${Math.random()*100}%;
+      width: ${Math.random()*3+1}px;
+      height: ${Math.random()*3+1}px;
+      animation-duration: ${Math.random()*12+8}s;
+      animation-delay: ${Math.random()*10}s;
+      --drift: ${(Math.random()-0.5)*120}px;
+    `;
+    pCont.appendChild(p);
+  }
+
+  /* ── IntersectionObserver for scroll reveals ── */
+  const revealEls = document.querySelectorAll(
+    '.summary-item, .card, .para-heading, .prog-title, .prog-step, .quote-text, .quote-attr'
+  );
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => obs.observe(el));
+
+  /* ── Active paragraph number highlight ── */
+  const sections = document.querySelectorAll('.section');
+  const numObs   = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      const num = e.target.querySelector('.para-number');
+      if(!num) return;
+      num.classList.toggle('active', e.isIntersecting);
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => numObs.observe(s));
+</script>
+</body>
+</html>
